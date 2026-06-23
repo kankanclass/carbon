@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탄소 발자국 계산기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 한글에 어울리는 폰트 적용 */
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        /* 입력 요소 선택 시 테두리 애니메이션 효과 */
+        .input-transition {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="m-0 p-0 font-sans text-gray-800 bg-[#eaf5f9] min-h-screen transition-colors duration-500 relative">
+
+    <div class="fixed top-4 right-4 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-md z-50 text-sm font-bold text-gray-700 border border-green-200">
+        👀 누적 방문객: <span id="visitor-count" class="text-green-600">로딩중...</span>명
+    </div>
+
+    <div id="main-page" class="w-full min-h-screen flex flex-col items-center justify-center relative overflow-hidden p-4">
+        
+        <svg class="absolute top-10 left-10 w-24 sm:w-32 text-white opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 19c2.48 0 4.5-2.02 4.5-4.5S19.98 10 17.5 10c-.3 0-.58.04-.85.11C15.82 7.76 13.56 6 11 6c-3.31 0-6 2.69-6 6 0 .22.02.43.05.64C2.24 13.06 0 15.27 0 18c0 3.31 2.69 6 6 6h11.5z"/></svg>
+        <svg class="absolute top-20 right-10 w-20 sm:w-28 text-white opacity-80" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 19c2.48 0 4.5-2.02 4.5-4.5S19.98 10 17.5 10c-.3 0-.58.04-.85.11C15.82 7.76 13.56 6 11 6c-3.31 0-6 2.69-6 6 0 .22.02.43.05.64C2.24 13.06 0 15.27 0 18c0 3.31 2.69 6 6 6h11.5z"/></svg>
+        <svg class="absolute bottom-20 left-1/4 w-32 sm:w-48 text-white opacity-60" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 19c2.48 0 4.5-2.02 4.5-4.5S19.98 10 17.5 10c-.3 0-.58.04-.85.11C15.82 7.76 13.56 6 11 6c-3.31 0-6 2.69-6 6 0 .22.02.43.05.64C2.24 13.06 0 15.27 0 18c0 3.31 2.69 6 6 6h11.5z"/></svg>
+
+        <div class="z-10 flex flex-col items-center mb-8 mt-4">
+            <div class="relative w-40 h-40 sm:w-48 sm:h-48 mb-6 drop-shadow-xl">
+                <div class="absolute inset-x-0 top-0 mx-auto w-32 h-32 sm:w-40 sm:h-40 bg-blue-300 rounded-full border-4 border-[#324545] flex items-center justify-center overflow-hidden">
+                    <div class="absolute top-1 left-2 w-14 h-12 bg-green-500 rounded-full opacity-90"></div>
+                    <div class="absolute top-8 right-2 w-16 h-14 bg-green-500 rounded-full opacity-90"></div>
+                    <div class="absolute bottom-2 left-6 w-12 h-10 bg-green-500 rounded-full opacity-90"></div>
+                    <div class="absolute inset-y-0 left-1/2 -ml-2 w-5 h-full bg-blue-200 opacity-80"></div>
+                </div>
+                <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-48 h-20 flex justify-between px-2">
+                    <div class="w-14 h-16 bg-[#ffbfa3] rounded-t-[2rem] border border-[#d28f73] transform -rotate-[25deg] translate-y-4 shadow-sm"></div>
+                    <div class="w-14 h-16 bg-[#ffbfa3] rounded-t-[2rem] border border-[#d28f73] transform rotate-[25deg] translate-y-4 shadow-sm"></div>
+                </div>
+                <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-white font-black px-3 py-1 rounded-full text-sm tracking-wider">GO</div>
+                <div class="absolute top-8 -right-2 text-3xl">🌲</div>
+                <div class="absolute bottom-4 -left-4 text-2xl">🌼</div>
+                <div class="absolute bottom-6 -right-2 text-2xl">🌻</div>
+            </div>
+            
+            <h1 class="text-3xl sm:text-[2.5rem] font-black text-[#2e3b3c] tracking-tight text-center mt-2" style="word-break: keep-all;">
+                지속가능한 발전(SDGs)
+            </h1>
+            <h2 class="text-xl sm:text-2xl font-bold text-[#5c6e6f] mt-3">
+                탄소 발자국
+            </h2>
+        </div>
+
+        <div class="z-10 bg-white/70 backdrop-blur-md p-6 sm:p-8 rounded-3xl shadow-xl w-full max-w-sm flex flex-col gap-4 border border-white/50">
+            <div id="login-error" class="text-red-500 text-sm font-bold hidden text-center">학번과 이름을 모두 입력해 주세요.</div>
+            <div>
+                <input type="text" id="student-id" placeholder="학번 (예: 10101)" class="w-full bg-white border border-gray-200 text-gray-700 py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium transition-all">
+            </div>
+            <div>
+                <input type="text" id="student-name" placeholder="이름 (예: 홍길동)" class="w-full bg-white border border-gray-200 text-gray-700 py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-400 font-medium transition-all">
+            </div>
+            <button onclick="startCalculator()" class="mt-2 w-full bg-[#36494a] hover:bg-[#253334] text-white font-bold py-4 px-4 rounded-xl shadow-lg transform hover:-translate-y-1 transition-all duration-200 text-lg">
+                시작하기
+            </button>
+        </div>
+    </div>
+
+    <div id="calculator-page" class="hidden min-h-screen w-full flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-8 border border-green-100 relative mt-4 mb-24">
+            
+            <button onclick="goBack()" class="absolute top-6 left-6 text-gray-400 hover:text-green-600 transition-colors p-1" title="메인 화면으로">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+            </button>
+            
+            <div class="text-center mb-8 mt-2">
+                <h1 class="text-3xl font-bold text-green-700 mb-2">🌿 탄소 발자국 계산기</h1>
+                <p class="text-gray-500 text-sm">나의 하루 생활 습관이 지구에 미치는 영향은?</p>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">1. 오늘 등교 수단과 이용 시간은? 🚌</label>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <select id="transport" class="input-transition block appearance-none w-full bg-gray-50 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                                <option value="" disabled selected>수단 선택</option>
+                                <option value="walk">도보 (탄소 0)</option>
+                                <option value="bicycle">자전거 (탄소 0)</option>
+                                <option value="subway">지하철</option>
+                                <option value="bus">버스</option>
+                                <option value="car">자가용 (가솔린)</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                        <div class="relative flex-1">
+                            <select id="transport-time" class="input-transition block appearance-none w-full bg-gray-50 border border-gray-200 text-gray-700 py-3 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                                <option value="" disabled selected>시간 (5분 단위)</option>
+                                <option value="5">5분</option>
+                                <option value="10">10분</option>
+                                <option value="15">15분</option>
+                                <option value="20">20분</option>
+                                <option value="25">25분</option>
+                                <option value="30">30분</option>
+                                <option value="35">35분</option>
+                                <option value="40">40분</option>
+                                <option value="45">45분</option>
+                                <option value="50">50분</option>
+                                <option value="55">55분</option>
+                                <option value="60">1시간</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="papercup" class="block text-gray-700 font-bold mb-2">2. 오늘 사용한 종이컵은 몇 개인가요? ☕️</label>
+                    <div class="flex items-center">
+                        <input type="number" id="papercup" min="0" placeholder="예: 2" class="input-transition block w-full bg-gray-50 border border-gray-200 text-gray-700 py-3 px-4 rounded-lg leading-tight focus:outline-none focus:bg-white focus:border-green-500 focus:ring-2 focus:ring-green-200">
+                        <span class="ml-3 text-gray-600 font-medium">개</span>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 font-bold mb-2">3. 오늘 급식은 얼마나 남겼나요? 🍽️</label>
+                    <div class="space-y-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700 font-medium">🍚 밥 남김 정도</span>
+                            <select id="food-rice" class="input-transition appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg leading-tight focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 w-36 sm:w-48 text-sm">
+                                <option value="" disabled selected>선택</option>
+                                <option value="0">다 먹음 (0)</option>
+                                <option value="0.5">반 남김 (0.5)</option>
+                                <option value="1">다 남김 (1)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700 font-medium">🍲 국 남김 정도</span>
+                            <select id="food-soup" class="input-transition appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg leading-tight focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 w-36 sm:w-48 text-sm">
+                                <option value="" disabled selected>선택</option>
+                                <option value="0">다 먹음 (0)</option>
+                                <option value="0.5">반 남김 (0.5)</option>
+                                <option value="1">다 남김 (1)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-700 font-medium">🥗 반찬 남긴 개수</span>
+                            <select id="food-side" class="input-transition appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-lg leading-tight focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-200 w-36 sm:w-48 text-sm">
+                                <option value="" disabled selected>선택</option>
+                                <option value="0">남김 없음 (0개)</option>
+                                <option value="1">1개 남김</option>
+                                <option value="2">2개 남김</option>
+                                <option value="3">3개 남김</option>
+                                <option value="4">4개 남김</option>
+                                <option value="5">5개 남김</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button onclick="calculateCarbon()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-green-300">
+                    내 탄소 배출량 계산하기 🌱
+                </button>
+            </div>
+
+            <div id="result-area" class="mt-6 hidden p-4 bg-gray-50 rounded-lg border border-gray-200 text-center">
+                <p id="result-message" class="text-gray-700 font-medium"></p>
+                <div id="chart-container" class="mt-6 h-48 w-full hidden relative">
+                    <canvas id="carbonChart"></canvas>
+                </div>
+                
+                <button onclick="goBack()" class="mt-8 w-full bg-[#5c6e6f] hover:bg-[#36494a] text-white font-bold py-3 px-4 rounded-xl shadow transition-all duration-200 focus:outline-none">
+                    처음으로 돌아가기 🏠
+                </button>
+            </div>
+
+        </div> 
+    </div> 
+
+    <footer class="fixed bottom-4 left-0 w-full text-center text-gray-500 text-xs sm:text-sm z-50 pointer-events-none">
+        <p>© 2026 정왕고등학교. All rights reserved.</p>
+        <p class="mt-0.5">Developed by 김깐깐</p>
+    </footer>
+    <script>
+        // 공통 구글 웹 앱 URL (🚨 여기에 새로 발급받은 URL을 붙여넣으세요)
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby6gZTJKizm45YZbz4e7K2kYcEjtO-Zo_TKTOw5GWjK7tgiRlsKuk2hbqEF2iRE8mcVew/exec';
+
+        let carbonChartInstance = null;
+
+        // 웹 페이지 켜질 때 방문객 수 가져오기
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchVisitorCount();
+        });
+
+       function fetchVisitorCount(isReadOnly = false) {
+    if (SCRIPT_URL === '' || !SCRIPT_URL.startsWith('http')) return;
+
+    let requestUrl = SCRIPT_URL;
+    // 제출 후 새로고침 시 방문객 수를 늘리지 않도록 파라미터 추가
+    if (isReadOnly) {
+        requestUrl += '?action=read';
+    }
+
+    fetch(requestUrl)
+        .then(response => response.json())
+        .then(data => {
+            if(data.totalVisitors !== undefined) {
+                document.getElementById('visitor-count').innerText = data.totalVisitors;
+            } else {
+                document.getElementById('visitor-count').innerText = "-";
+            }
+        })
+        .catch(error => {
+            console.error('방문객 수를 불러오는데 실패했습니다:', error);
+            document.getElementById('visitor-count').innerText = "오류";
+        });
+}
+
+        // 시작하기 버튼 동작
+        function startCalculator() {
+            const studentId = document.getElementById('student-id').value.trim();
+            const studentName = document.getElementById('student-name').value.trim();
+            const errorMsg = document.getElementById('login-error');
+
+            if (!studentId || !studentName) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            errorMsg.classList.add('hidden');
+
+            document.getElementById('main-page').classList.add('hidden');
+            document.getElementById('calculator-page').classList.remove('hidden');
+            document.getElementById('calculator-page').classList.add('flex');
+            
+            document.body.classList.remove('bg-[#eaf5f9]');
+            document.body.classList.add('bg-green-50');
+        }
+
+        // 뒤로가기 버튼 동작
+        function goBack() {
+            document.getElementById('calculator-page').classList.add('hidden');
+            document.getElementById('calculator-page').classList.remove('flex');
+            document.getElementById('main-page').classList.remove('hidden');
+            
+            document.body.classList.remove('bg-green-50');
+            document.body.classList.add('bg-[#eaf5f9]');
+            
+            document.getElementById('result-area').classList.add('hidden');
+        }
+
+        // 탄소 계산 및 구글시트 연동 동작
+        function calculateCarbon() {
+            const resultArea = document.getElementById('result-area');
+            const resultMessage = document.getElementById('result-message');
+            const chartContainer = document.getElementById('chart-container');
+            
+            const transport = document.getElementById('transport').value;
+            const transportTime = document.getElementById('transport-time').value;
+            const papercup = document.getElementById('papercup').value;
+            
+            const rice = document.getElementById('food-rice').value;
+            const soup = document.getElementById('food-soup').value;
+            const side = document.getElementById('food-side').value;
+
+            if (!transport || !transportTime || papercup === "" || rice === "" || soup === "" || side === "") {
+                resultArea.classList.remove('hidden');
+                chartContainer.classList.add('hidden');
+                resultMessage.innerHTML = "<span class='text-orange-500 font-bold'>모든 항목을 빠짐없이 입력해 주세요! 🤔</span>";
+                return;
+            }
+
+            let transportCarbon = 0;
+            let cupCarbon = parseInt(papercup) * 11;
+            
+            const timeUnits = parseInt(transportTime) / 5;
+            if (transport === 'car') transportCarbon = 270 * timeUnits;
+            else if (transport === 'bus') transportCarbon = 45 * timeUnits;
+            else if (transport === 'subway') transportCarbon = 32 * timeUnits;
+            else if (transport === 'bicycle' || transport === 'walk') transportCarbon = 0;
+
+            const R = parseFloat(rice);
+            const S = parseFloat(soup);
+            const N = parseInt(side);
+            let foodCarbon = (R * 300) + (S * 150) + (N * 150);
+
+            let totalCarbon = transportCarbon + cupCarbon + foodCarbon;
+
+            let feedbackMessage = "";
+            let feedbackColor = "";
+
+            if (totalCarbon === 0) {
+                feedbackMessage = "완벽합니다! 탄소 배출 제로! 진정한 에코 워리어! 🦸‍♂️🦸‍♀️";
+                feedbackColor = "text-blue-600";
+            } else if (totalCarbon <= 100) {
+                feedbackMessage = "훌륭합니다! 지구를 지키는 좋은 습관을 가지고 계시네요! 🌱";
+                feedbackColor = "text-blue-600";
+            } else {
+                const maxCarbon = Math.max(transportCarbon, cupCarbon, foodCarbon);
+                
+                if (totalCarbon <= 300) {
+                    feedbackColor = "text-orange-500";
+                } else {
+                    feedbackColor = "text-red-500";
+                }
+
+                if (maxCarbon === foodCarbon) {
+                    feedbackMessage = "급식 잔반에서 탄소 배출이 가장 많네요. 내일은 먹을 만큼만 받아보아요! 🍽️";
+                } else if (maxCarbon === transportCarbon) {
+                    feedbackMessage = "교통수단에서 탄소 배출이 가장 많네요. 가까운 거리는 걷거나 자전거 어때요? 🚶‍♂️🚲";
+                } else if (maxCarbon === cupCarbon) {
+                    feedbackMessage = "종이컵 사용으로 인한 배출이 많네요. 내일은 개인 텀블러를 챙겨볼까요? 🥤";
+                }
+            }
+
+            resultArea.classList.remove('hidden');
+            resultArea.classList.remove('bg-gray-50', 'border-gray-200');
+            resultArea.classList.add('bg-green-50', 'border-green-300');
+            
+            resultMessage.innerHTML = `오늘 당신의 탄소 배출량은 <br>
+                <strong class='text-3xl text-green-700 mt-2 mb-3 block'>${totalCarbon}g</strong> 입니다.
+                <span class='${feedbackColor} font-bold text-md mt-3 block border-t border-green-200 pt-3'>
+                    ${feedbackMessage}
+                </span>`;
+                
+            renderChart(transportCarbon, cupCarbon, foodCarbon);
+
+            const studentId = document.getElementById('student-id').value.trim();
+            const studentName = document.getElementById('student-name').value.trim();
+
+            sendDataToGoogleSheet(studentId, studentName, totalCarbon, transport, transportTime, transportCarbon, papercup, cupCarbon, rice, soup, side, foodCarbon);
+        }
+
+        // 구글 시트로 POST 전송
+        function sendDataToGoogleSheet(studentId, studentName, totalCarbon, transport, transportTime, transportCarbon, papercup, cupCarbon, rice, soup, side, foodCarbon) {
+            
+            if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycby6gZTJKizm45YZbz4e7K2kYcEjtO-Zo_TKTOw5GWjK7tgiRlsKuk2hbqEF2iRE8mcVew/exec' || SCRIPT_URL === '') {
+                console.log("Web App URL이 입력되지 않았습니다. 시트 연동을 건너뜁니다.");
+                return;
+            }
+
+            const data = {
+                studentId: studentId,
+                studentName: studentName,
+                totalCarbon: totalCarbon,
+                transport: transport,
+                transportTime: transportTime,
+                transportCarbon: transportCarbon,
+                papercup: papercup,
+                cupCarbon: cupCarbon,
+                rice: rice,
+                soup: soup,
+                side: side,
+                foodCarbon: foodCarbon
+            };
+
+            const resultMessage = document.getElementById('result-message');
+            
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(() => {
+                resultMessage.innerHTML += `<div class="mt-4 text-sm text-blue-600 font-bold bg-blue-50 p-3 rounded-lg shadow-inner">✅ 선생님의 구글 시트로 기록이 성공적으로 전송되었습니다!</div>`;
+                // 제출 완료 후 방문객 수 새로고침
+                fetchVisitorCount(true); 
+            })
+            .catch(error => {
+                console.error('전송 중 오류 발생:', error);
+                resultMessage.innerHTML += `<div class="mt-4 text-sm text-red-500 font-bold bg-red-50 p-2 rounded-lg">❌ 구글 시트 전송에 실패했습니다. (콘솔 확인)</div>`;
+            });
+        }
+
+        function renderChart(transport, cup, food) {
+            const chartContainer = document.getElementById('chart-container');
+            const ctx = document.getElementById('carbonChart').getContext('2d');
+            
+            chartContainer.classList.remove('hidden');
+
+            if (carbonChartInstance) {
+                carbonChartInstance.destroy();
+            }
+
+            carbonChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['등교 수단 🚌', '종이컵 ☕️', '급식 잔반 🍽️'],
+                    datasets: [{
+                        label: '배출량 (g)',
+                        data: [transport, cup, food],
+                        backgroundColor: [
+                            'rgba(54, 162, 235, 0.6)',
+                            'rgba(255, 206, 86, 0.6)',
+                            'rgba(255, 99, 132, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(255, 99, 132, 1)'
+                        ],
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) { return context.parsed.y + 'g'; }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(0, 0, 0, 0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
