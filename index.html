@@ -195,7 +195,7 @@
     </footer>
     <script>
         // 공통 구글 웹 앱 URL (🚨 여기에 새로 발급받은 URL을 붙여넣으세요)
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyE3Qq32gHDUHI76xV0_FHnz5o7hTTTAZzgQAmlgjIOTugGHkBZdvKyAh_uyHuE0QoGtw/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw060eObIprC-WwPiqt00f8bIMz7g_sxUkCC-8W77UmrZrI1td2yqtNeR2BEO3arQnnoQ/exec';
 
         let carbonChartInstance = null;
 
@@ -349,8 +349,8 @@
         // 구글 시트로 POST 전송
         function sendDataToGoogleSheet(studentId, studentName, totalCarbon, transport, transportTime, transportCarbon, papercup, cupCarbon, rice, soup, side, foodCarbon) {
             
-            if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbyE3Qq32gHDUHI76xV0_FHnz5o7hTTTAZzgQAmlgjIOTugGHkBZdvKyAh_uyHuE0QoGtw/exec' || SCRIPT_URL === '') {
-                console.log("Web App URL이 입력되지 않았습니다. 시트 연동을 건너뜁니다.");
+            if (SCRIPT_URL === '') {
+                console.log("Web App URL이 입력되지 않았습니다.");
                 return;
             }
 
